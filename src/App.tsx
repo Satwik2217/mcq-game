@@ -80,7 +80,13 @@ export default function App() {
   } = useTabSwitch(handleViolation)
 
   const initGame = useCallback((playerName: string) => {
-    const shuffled = shuffle(ALL_QUESTIONS).map((q) => ({ ...q, options: shuffle(q.options) }))
+    const shuffled = shuffle(ALL_QUESTIONS).map((q) => {
+      const originalOptions = [...q.options]
+      const correctText = originalOptions[q.correctAnswer]
+      const newOptions = shuffle(originalOptions)
+      const newCorrectIndex = newOptions.indexOf(correctText)
+      return { ...q, options: newOptions, correctAnswer: newCorrectIndex }
+    })
     const ordered: typeof shuffled = []
     for (const world of WORLDS) {
       const worldQs = shuffled.filter((q) => q.worldId === world.id)

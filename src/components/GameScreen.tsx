@@ -11,6 +11,8 @@ import { Progress } from './ui/progress'
 import { Button } from './ui/button'
 import { WORLDS } from '@/data/worlds'
 import { POSITIVE_MESSAGES, ENCOURAGING_MESSAGES, POWER_UPS } from '@/data/achievements'
+import { WRONG_ANSWER_MEMES, type MemeDefinition } from '@/data/memes'
+import { MemeDisplay } from './MemeDisplay'
 import { SCORE_MAP, XP_MAP, calculateLevel } from '@/utils/scoring'
 import { useAudio } from '@/hooks/useAudio'
 import type { Question, GameState } from '@/types'
@@ -46,6 +48,7 @@ export function GameScreen({
   const [showPowerUp, setShowPowerUp] = useState(false)
   const [confetti, setConfetti] = useState(false)
   const answerTimeRef = useRef<number>(0)
+  const [wrongMeme, setWrongMeme] = useState<MemeDefinition | null>(null)
   const { playCorrect, playWrong, playClick } = useAudio()
 
   const handleTimeUp = useCallback(() => {
@@ -54,6 +57,8 @@ export function GameScreen({
       setShowResult(true)
       onAnswer(q.id, -1, 0)
       playWrong()
+      const randomMeme = WRONG_ANSWER_MEMES[Math.floor(Math.random() * WRONG_ANSWER_MEMES.length)]
+      setWrongMeme(randomMeme)
     }
   }, [showResult, q.id, onAnswer, playWrong])
 
@@ -73,6 +78,7 @@ export function GameScreen({
     setConfetti(false)
     timer.reset(30)
     answerTimeRef.current = Date.now()
+    setWrongMeme(null)
   }, [state.currentQuestionIndex])
 
   useEffect(() => {
@@ -111,9 +117,12 @@ export function GameScreen({
     if (correct) {
       playCorrect()
       setConfetti(true)
+      setWrongMeme(null)
       setTimeout(() => setConfetti(false), 1500)
     } else {
       playWrong()
+      const randomMeme = WRONG_ANSWER_MEMES[Math.floor(Math.random() * WRONG_ANSWER_MEMES.length)]
+      setWrongMeme(randomMeme)
     }
 
     setTimeout(() => setPopup((p) => ({ ...p, show: false })), 1500)
@@ -233,6 +242,10 @@ export function GameScreen({
             animate={{ opacity: 1, y: 0 }}
             className="space-y-4"
           >
+            {wrongMeme && (
+              <MemeDisplay meme={wrongMeme} />
+            )}
+
             <Card className="p-4 md:p-6">
               {selectedAnswer === q.correctAnswer ? (
                 <div className="flex items-start gap-3">
